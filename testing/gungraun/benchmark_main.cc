@@ -37,9 +37,17 @@ class ValidationReporter : public benchmark::BenchmarkReporter {
   bool valid = true;
 };
 
+void BenchmarkLog(lynx::base::logging::LogMessage* message, const char*) {
+  if (message->severity() == lynx::base::logging::LOG_FATAL) {
+    std::fprintf(stderr, "%s", message->stream().str().c_str());
+  }
+}
+
 int main(int argc, char** argv) {
-  // Normal engine cleanup logs contain addresses and timestamps.
-  lynx::base::logging::SetMinLogLevel(lynx::base::logging::LOG_FATAL);
+  // The public threshold keeps ERROR enabled. Route diagnostics through a quiet
+  // callback instead of the fallback console sink; fatal messages still abort.
+  lynx::base::logging::SetMinLogLevel(lynx::base::logging::LOG_ERROR);
+  lynx::base::logging::InitLynxLogging(nullptr, BenchmarkLog, true);
   benchmark::Initialize(&argc, argv);
   if (benchmark::ReportUnrecognizedArguments(argc, argv)) return 2;
   ValidationReporter reporter;

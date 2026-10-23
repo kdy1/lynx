@@ -74,12 +74,21 @@ extra = "".join(f'    "//testing/gungraun_native:gungraun_{name}",\n' for name i
 root.write_text(original.replace('  deps = [\n', '  deps = [\n' + extra, 1))
 try:
     subprocess.run(["tools/env.sh", "gn", "gen", str(out), "--export-compile-commands", "--args=" + args], cwd=source, check=True)
-    subprocess.run(["tools/env.sh", "ninja", "-C", str(out), "-j4",
-                    *[f"gungraun_{name}" for name in modules]], cwd=source, check=True)
     for name in ("args.gn", "compile_commands.json"):
         shutil.copy2(out / name, build / name)
     (build / "compiler.txt").write_text(subprocess.check_output(
         [str(source / "buildtools/llvm/bin/clang++"), "--version"], text=True))
+    # Compile fixtures first so harness errors do not wait for the renderer.
+    objects = []
+    for module, sources in modules.items():
+        for name in ["benchmark_main.cc"] + sources:
+            path = (Path(name[2:]) if name.startswith("//") else
+                    Path("testing/gungraun_native") / name)
+            objects.append(f"obj/{path.parent}/gungraun_{module}.{path.stem}.o")
+    subprocess.run(["tools/env.sh", "ninja", "-C", str(out), "-j4", *objects],
+                   cwd=source, check=True)
+    subprocess.run(["tools/env.sh", "ninja", "-C", str(out), "-j4",
+                    *[f"gungraun_{name}" for name in modules]], cwd=source, check=True)
     for name in modules:
         shutil.copy2(out / f"gungraun_{name}", build / f"gungraun_{name}")
 finally:

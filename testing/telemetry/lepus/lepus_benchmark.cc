@@ -377,7 +377,7 @@ static void BM_ValueConstructMoveString(benchmark::State& state) {
 }
 
 static void BM_ValueStringVisit(benchmark::State& state) {
-  std::vector<const lepus::Value> arr;
+  std::vector<lepus::Value> arr;
   for (int j = 0; j < 1000; j++) {
     for (int i = 0; i < 26; i++) {
       arr.emplace_back(std::string(10, 'a' + i));

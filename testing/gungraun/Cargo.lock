@@ -123,6 +123,7 @@ name = "lynx-gungraun"
 version = "0.1.0"
 dependencies = [
  "gungraun",
+ "serde_json",
 ]
 
 [[package]]

@@ -1,0 +1,33 @@
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
+#include <cstdio>
+#include <vector>
+
+#include "third_party/benchmark/include/benchmark/benchmark.h"
+
+// Suppress clock-dependent formatting. The suite selects exactly one case and
+// --benchmark_min_time=0 makes the pinned Benchmark runner execute it once.
+class ValidationReporter : public benchmark::BenchmarkReporter {
+ public:
+  bool ReportContext(const Context&) override { return true; }
+  void ReportRuns(const std::vector<Run>& reports) override {
+    for (const auto& report : reports) {
+      ++runs;
+      valid = valid && !report.error_occurred && report.iterations == 1;
+    }
+  }
+  int runs = 0;
+  bool valid = true;
+};
+
+int main(int argc, char** argv) {
+  benchmark::Initialize(&argc, argv);
+  if (benchmark::ReportUnrecognizedArguments(argc, argv)) return 2;
+  ValidationReporter reporter;
+  benchmark::RunSpecifiedBenchmarks(&reporter);
+  if (!reporter.valid || reporter.runs != 1) return 3;
+  std::puts("ok");
+  return 0;
+}

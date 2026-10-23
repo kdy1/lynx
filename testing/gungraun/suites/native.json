@@ -1,0 +1,143 @@
+{
+  "build": [
+    [
+      "python3",
+      "{harness}/build_native.py",
+      "{source}",
+      "{harness}",
+      "{build}"
+    ]
+  ],
+  "cases": [
+    {
+      "id": "layout_flex",
+      "binary": "{build}/gungraun_layout",
+      "args": [
+        "--benchmark_filter=^BM_Layout/Flex$",
+        "--benchmark_min_time=0",
+        "--benchmark_repetitions=1"
+      ],
+      "expected_stdout": "ok"
+    },
+    {
+      "id": "layout_grid",
+      "binary": "{build}/gungraun_layout",
+      "args": [
+        "--benchmark_filter=^BM_Layout/Grid$",
+        "--benchmark_min_time=0",
+        "--benchmark_repetitions=1"
+      ],
+      "expected_stdout": "ok"
+    },
+    {
+      "id": "layout_cachedflex",
+      "binary": "{build}/gungraun_layout",
+      "args": [
+        "--benchmark_filter=^BM_Layout/CachedFlex$",
+        "--benchmark_min_time=0",
+        "--benchmark_repetitions=1"
+      ],
+      "expected_stdout": "ok"
+    },
+    {
+      "id": "selector_class",
+      "binary": "{build}/gungraun_styling",
+      "args": [
+        "--benchmark_filter=^BM_SelectorMatcherSimple/ClassHit$",
+        "--benchmark_min_time=0",
+        "--benchmark_repetitions=1"
+      ],
+      "expected_stdout": "ok"
+    },
+    {
+      "id": "selector_descendant",
+      "binary": "{build}/gungraun_styling",
+      "args": [
+        "--benchmark_filter=^BM_SelectorMatcherDescendant/Hit/8$",
+        "--benchmark_min_time=0",
+        "--benchmark_repetitions=1"
+      ],
+      "expected_stdout": "ok"
+    },
+    {
+      "id": "css_variables",
+      "binary": "{build}/gungraun_styling",
+      "args": [
+        "--benchmark_filter=^BM_HandleCSSVariables_Simple$",
+        "--benchmark_min_time=0",
+        "--benchmark_repetitions=1"
+      ],
+      "expected_stdout": "ok"
+    },
+    {
+      "id": "css_invalidation",
+      "binary": "{build}/gungraun_styling",
+      "args": [
+        "--benchmark_filter=^BM_FiberClassInvalidation/127/8$",
+        "--benchmark_min_time=0",
+        "--benchmark_repetitions=1"
+      ],
+      "expected_stdout": "ok"
+    },
+    {
+      "id": "restyle_legacy",
+      "binary": "{build}/gungraun_styling",
+      "args": [
+        "--benchmark_filter=^BM_FiberRestyleClass/LegacyDescendantSparse/127/real_time$",
+        "--benchmark_min_time=0",
+        "--benchmark_repetitions=1"
+      ],
+      "expected_stdout": "ok"
+    },
+    {
+      "id": "restyle_new",
+      "binary": "{build}/gungraun_styling",
+      "args": [
+        "--benchmark_filter=^BM_FiberRestyleClass/NewDescendantSparse/127/real_time$",
+        "--benchmark_min_time=0",
+        "--benchmark_repetitions=1"
+      ],
+      "expected_stdout": "ok"
+    },
+    {
+      "id": "runtime_value_copy",
+      "binary": "{build}/gungraun_runtime",
+      "args": [
+        "--benchmark_filter=^BM_ValueCopyConstruct$",
+        "--benchmark_min_time=0",
+        "--benchmark_repetitions=1"
+      ],
+      "expected_stdout": "ok"
+    },
+    {
+      "id": "runtime_array",
+      "binary": "{build}/gungraun_runtime",
+      "args": [
+        "--benchmark_filter=^BM_ArrayPushBack$",
+        "--benchmark_min_time=0",
+        "--benchmark_repetitions=1"
+      ],
+      "expected_stdout": "ok"
+    },
+    {
+      "id": "runtime_table",
+      "binary": "{build}/gungraun_runtime",
+      "args": [
+        "--benchmark_filter=^BM_TableSetValueEmplace$",
+        "--benchmark_min_time=0",
+        "--benchmark_repetitions=1"
+      ],
+      "expected_stdout": "ok"
+    },
+    {
+      "id": "runtime_convert",
+      "binary": "{build}/gungraun_runtime",
+      "args": [
+        "--benchmark_filter=^BM_FromLepusDeepConvert$",
+        "--benchmark_min_time=0",
+        "--benchmark_repetitions=1"
+      ],
+      "expected_stdout": "ok"
+    }
+  ]
+}

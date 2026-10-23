@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     env:
-      CCACHE_DIR: ${{ runner.temp }}/ccache
+      CCACHE_DIR: ${{ github.workspace }}/.gungraun-ccache
       CCACHE_MAXSIZE: 2G
       CCACHE_COMPILERCHECK: content
     steps:

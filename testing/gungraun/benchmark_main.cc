@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "third_party/benchmark/include/benchmark/benchmark.h"
+#include "third_party/googletest/googletest/include/gtest/gtest.h"
 #include "valgrind/callgrind.h"
 
 // Suppress clock-dependent formatting. The suite selects exactly one case and
@@ -32,7 +33,8 @@ int main(int argc, char** argv) {
   if (benchmark::ReportUnrecognizedArguments(argc, argv)) return 2;
   ValidationReporter reporter;
   benchmark::RunSpecifiedBenchmarks(&reporter);
-  if (!reporter.valid || reporter.runs != 1) return 3;
+  if (!reporter.valid || reporter.runs != 1 ||
+      ::testing::UnitTest::GetInstance()->Failed()) return 3;
   std::puts("ok");
   return 0;
 }

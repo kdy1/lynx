@@ -175,7 +175,8 @@
         "--benchmark_repetitions=1"
       ],
       "expected_stdout": "ok",
-      "instrumented": true
+      "instrumented": true,
+      "cwd": "{build}"
     },
     {
       "id": "runtime_array",
@@ -186,7 +187,8 @@
         "--benchmark_repetitions=1"
       ],
       "expected_stdout": "ok",
-      "instrumented": true
+      "instrumented": true,
+      "cwd": "{build}"
     },
     {
       "id": "runtime_table",
@@ -197,7 +199,8 @@
         "--benchmark_repetitions=1"
       ],
       "expected_stdout": "ok",
-      "instrumented": true
+      "instrumented": true,
+      "cwd": "{build}"
     },
     {
       "id": "runtime_convert",
@@ -208,7 +211,8 @@
         "--benchmark_repetitions=1"
       ],
       "expected_stdout": "ok",
-      "instrumented": true
+      "instrumented": true,
+      "cwd": "{build}"
     }
   ]
 }

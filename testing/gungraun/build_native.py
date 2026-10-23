@@ -14,6 +14,8 @@ fixture = source / "testing/gungraun_native"
 if fixture.exists():
     shutil.rmtree(fixture)
 fixture.mkdir()
+shutil.copytree(harness / "telemetry/lepus", build / "benchmark_test_files",
+                ignore=shutil.ignore_patterns("*.cc", "BUILD.gn"))
 shutil.copytree("/usr/include/valgrind", fixture / "valgrind")
 for name in ("benchmark_main.cc", "layout_benchmark.cc"):
     shutil.copy2(harness / name, fixture / name)

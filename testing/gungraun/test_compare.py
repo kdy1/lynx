@@ -55,10 +55,6 @@ class ComparisonTests(unittest.TestCase):
         self.assertEqual(report(counts)["performance_gate"], "not_passed")
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class SuiteTests(unittest.TestCase):
     def test_custom_case_portfolio_and_frequencies(self):
         with tempfile.TemporaryDirectory() as root:
@@ -101,3 +97,7 @@ class SuiteTests(unittest.TestCase):
         self.assertEqual(resolve(["{source}/binary", "{build}/file with spaces", "$(false)"],
                                  {"source": "/src", "build": "/out"}),
                          ["/src/binary", "/out/file with spaces", "$(false)"])
+
+
+if __name__ == "__main__":
+    unittest.main()

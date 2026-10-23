@@ -2,12 +2,13 @@
 
 Use `testing/gungraun/README.md` and `.github/workflows/gungraun.yml` as the
 implementation contract. `base_ref` and `head_ref` are required full SHAs;
-`--ref` selects the workflow/harness branch. The initial workflow has no filter:
-it always runs its three Vector cases.
+`--ref` selects the workflow/harness branch. The default `native` suite includes layout, styling, and runtime workloads.
+Use `suite=vector` for the original Vector cases, `cases` for a frozen subset,
+and `dhat=true` to retain allocation profiles alongside Callgrind.
 
 ```sh
 gh workflow run gungraun.yml --repo kdy1/lynx --ref <workflow-branch> \
-  -f base_ref=<base-sha> -f head_ref=<head-sha>
+  -f base_ref=<base-sha> -f head_ref=<head-sha> -f suite=native
 gh run list --repo kdy1/lynx --workflow gungraun.yml --event workflow_dispatch \
   --branch <workflow-branch> --json databaseId,headSha,createdAt,status,url
 gh run view <verified-run-id> --repo kdy1/lynx
@@ -26,9 +27,10 @@ experiment PRs or push the default branch to bypass this prerequisite.
 
 ## Extend for another native target
 
-The included Vector fixture uses only headers, so direct Clang compilation is
-sufficient. For layout, styling, or runtime targets, inspect their GN dependencies
-and existing telemetry cases. See `testing/telemetry/styling/css/README.md` and
+The Vector suite uses only headers, so direct Clang compilation is sufficient.
+The native suite builds actual Starlight, styling, and Lepus fixtures with GN.
+For additional targets, register a suite using the harness guide and inspect
+their GN dependencies and existing telemetry cases. See `testing/telemetry/styling/css/README.md` and
 `testing/README_UT.md` for repository build/test entry points. Use Habitat and the
 required GN target when linking real Lynx components; do not benchmark a copied
 or simplified replacement implementation.

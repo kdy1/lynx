@@ -6,13 +6,18 @@
 #include <vector>
 
 #include "third_party/benchmark/include/benchmark/benchmark.h"
+#include "valgrind/callgrind.h"
 
 // Suppress clock-dependent formatting. The suite selects exactly one case and
 // --benchmark_min_time=0 makes the pinned Benchmark runner execute it once.
 class ValidationReporter : public benchmark::BenchmarkReporter {
  public:
-  bool ReportContext(const Context&) override { return true; }
+  bool ReportContext(const Context&) override {
+    CALLGRIND_START_INSTRUMENTATION;
+    return true;
+  }
   void ReportRuns(const std::vector<Run>& reports) override {
+    CALLGRIND_STOP_INSTRUMENTATION;
     for (const auto& report : reports) {
       ++runs;
       valid = valid && !report.error_occurred && report.iterations == 1;

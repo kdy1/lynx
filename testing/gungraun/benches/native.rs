@@ -4,7 +4,10 @@ use serde_json::Value;
 
 fn config() -> BinaryBenchmarkConfig {
     let mut config = BinaryBenchmarkConfig::default();
-    config.tool(Callgrind::with_args(["--cache-sim=yes", "--branch-sim=yes"]));
+    config.tool(Callgrind::with_args([
+        "--cache-sim=yes",
+        "--branch-sim=yes",
+    ]));
     if std::env::var("LYNX_DHAT").as_deref() == Ok("true") {
         config.tool(Dhat::default());
     }
@@ -24,7 +27,13 @@ binary_benchmark_group!(
             for (key, value) in case["env"].as_object().unwrap() {
                 command.env(key, value.as_str().unwrap());
             }
-            benchmark.bench(Bench::new(case["id"].as_str().unwrap()).command(command.build()));
+            let mut bench = Bench::new(case["id"].as_str().unwrap());
+            if case["instrumented"].as_bool().unwrap_or(false) {
+                bench.config(BinaryBenchmarkConfig::default().tool(Callgrind::with_args([
+                    "--cache-sim=yes", "--branch-sim=yes", "--instr-atstart=no",
+                ])));
+            }
+            benchmark.bench(bench.command(command.build()));
         }
         group.binary_benchmark(benchmark);
     }

@@ -1,6 +1,31 @@
 {
   "build": [
     [
+      "clang++",
+      "-std=c++17",
+      "-O2",
+      "-g",
+      "-DNDEBUG",
+      "-I",
+      "{source}",
+      "{harness}/vector.cc",
+      "-o",
+      "{build}/vector"
+    ],
+    [
+      "clang++",
+      "-std=c++17",
+      "-O2",
+      "-g",
+      "-DNDEBUG",
+      "-DLYNX_GUNGRAUN_REFERENCE",
+      "-I",
+      "{source}",
+      "{harness}/vector.cc",
+      "-o",
+      "{build}/reference"
+    ],
+    [
       "python3",
       "{harness}/build_native.py",
       "{source}",
@@ -10,6 +35,39 @@
   ],
   "cases": [
     {
+      "id": "push",
+      "binary": "{build}/vector",
+      "args": [
+        "push"
+      ],
+      "reference": [
+        "{build}/reference",
+        "push"
+      ]
+    },
+    {
+      "id": "reserve",
+      "binary": "{build}/vector",
+      "args": [
+        "reserve"
+      ],
+      "reference": [
+        "{build}/reference",
+        "reserve"
+      ]
+    },
+    {
+      "id": "erase",
+      "binary": "{build}/vector",
+      "args": [
+        "erase"
+      ],
+      "reference": [
+        "{build}/reference",
+        "erase"
+      ]
+    },
+    {
       "id": "layout_flex",
       "binary": "{build}/gungraun_layout",
       "args": [
@@ -17,7 +75,8 @@
         "--benchmark_min_time=0",
         "--benchmark_repetitions=1"
       ],
-      "expected_stdout": "ok"
+      "expected_stdout": "ok",
+      "instrumented": true
     },
     {
       "id": "layout_grid",
@@ -27,7 +86,8 @@
         "--benchmark_min_time=0",
         "--benchmark_repetitions=1"
       ],
-      "expected_stdout": "ok"
+      "expected_stdout": "ok",
+      "instrumented": true
     },
     {
       "id": "layout_cachedflex",
@@ -37,7 +97,8 @@
         "--benchmark_min_time=0",
         "--benchmark_repetitions=1"
       ],
-      "expected_stdout": "ok"
+      "expected_stdout": "ok",
+      "instrumented": true
     },
     {
       "id": "selector_class",
@@ -47,7 +108,8 @@
         "--benchmark_min_time=0",
         "--benchmark_repetitions=1"
       ],
-      "expected_stdout": "ok"
+      "expected_stdout": "ok",
+      "instrumented": true
     },
     {
       "id": "selector_descendant",
@@ -57,7 +119,8 @@
         "--benchmark_min_time=0",
         "--benchmark_repetitions=1"
       ],
-      "expected_stdout": "ok"
+      "expected_stdout": "ok",
+      "instrumented": true
     },
     {
       "id": "css_variables",
@@ -67,7 +130,8 @@
         "--benchmark_min_time=0",
         "--benchmark_repetitions=1"
       ],
-      "expected_stdout": "ok"
+      "expected_stdout": "ok",
+      "instrumented": true
     },
     {
       "id": "css_invalidation",
@@ -77,7 +141,8 @@
         "--benchmark_min_time=0",
         "--benchmark_repetitions=1"
       ],
-      "expected_stdout": "ok"
+      "expected_stdout": "ok",
+      "instrumented": true
     },
     {
       "id": "restyle_legacy",
@@ -87,7 +152,8 @@
         "--benchmark_min_time=0",
         "--benchmark_repetitions=1"
       ],
-      "expected_stdout": "ok"
+      "expected_stdout": "ok",
+      "instrumented": true
     },
     {
       "id": "restyle_new",
@@ -97,7 +163,8 @@
         "--benchmark_min_time=0",
         "--benchmark_repetitions=1"
       ],
-      "expected_stdout": "ok"
+      "expected_stdout": "ok",
+      "instrumented": true
     },
     {
       "id": "runtime_value_copy",
@@ -107,7 +174,8 @@
         "--benchmark_min_time=0",
         "--benchmark_repetitions=1"
       ],
-      "expected_stdout": "ok"
+      "expected_stdout": "ok",
+      "instrumented": true
     },
     {
       "id": "runtime_array",
@@ -117,7 +185,8 @@
         "--benchmark_min_time=0",
         "--benchmark_repetitions=1"
       ],
-      "expected_stdout": "ok"
+      "expected_stdout": "ok",
+      "instrumented": true
     },
     {
       "id": "runtime_table",
@@ -127,7 +196,8 @@
         "--benchmark_min_time=0",
         "--benchmark_repetitions=1"
       ],
-      "expected_stdout": "ok"
+      "expected_stdout": "ok",
+      "instrumented": true
     },
     {
       "id": "runtime_convert",
@@ -137,7 +207,8 @@
         "--benchmark_min_time=0",
         "--benchmark_repetitions=1"
       ],
-      "expected_stdout": "ok"
+      "expected_stdout": "ok",
+      "instrumented": true
     }
   ]
 }

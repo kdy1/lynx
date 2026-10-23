@@ -81,7 +81,7 @@ def main():
         "harness_sha256": {str(p.relative_to(harness)): hashlib.sha256(p.read_bytes()).hexdigest()
                            for p in sorted(harness.rglob("*"))
                            if p.is_file() and "target" not in p.parts and "__pycache__" not in p.parts},
-        "boundary": "whole native process, including setup and destruction",
+        "boundary": "Callgrind: instrumented cases use client requests; others count the whole process. DHAT: whole process",
     }
     (output / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     env = dict(os.environ, LYNX_CASES=str(output / "cases.json"), GUNGRAUN_COLOR="never")
@@ -139,7 +139,7 @@ def main():
         lines.append(f"| {name} | {values['base']} | {values['head']} | {delta:+.3f}% |")
     lines += ["", f"Performance gate: **{result['performance_gate']}** (reporting only).",
               f"Same-SHA check: {result['same_sha_check']}.",
-              "Whole-process counts; not wall-clock speed. See artifacts for exact revisions."]
+              "Not wall-clock speed. See metadata and artifacts for collection boundaries and exact revisions."]
     with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
         summary.write("\n".join(lines) + "\n")
     # A same-SHA run checks reproducibility, not optimization acceptance.

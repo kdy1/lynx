@@ -1,0 +1,64 @@
+{
+  "build": [
+    [
+      "clang++",
+      "-std=c++17",
+      "-O2",
+      "-g",
+      "-DNDEBUG",
+      "-I",
+      "{source}",
+      "{harness}/vector.cc",
+      "-o",
+      "{build}/vector"
+    ],
+    [
+      "clang++",
+      "-std=c++17",
+      "-O2",
+      "-g",
+      "-DNDEBUG",
+      "-DLYNX_GUNGRAUN_REFERENCE",
+      "-I",
+      "{source}",
+      "{harness}/vector.cc",
+      "-o",
+      "{build}/reference"
+    ]
+  ],
+  "cases": [
+    {
+      "id": "push",
+      "binary": "{build}/vector",
+      "args": [
+        "push"
+      ],
+      "reference": [
+        "{build}/reference",
+        "push"
+      ]
+    },
+    {
+      "id": "reserve",
+      "binary": "{build}/vector",
+      "args": [
+        "reserve"
+      ],
+      "reference": [
+        "{build}/reference",
+        "reserve"
+      ]
+    },
+    {
+      "id": "erase",
+      "binary": "{build}/vector",
+      "args": [
+        "erase"
+      ],
+      "reference": [
+        "{build}/reference",
+        "erase"
+      ]
+    }
+  ]
+}

@@ -76,6 +76,12 @@ static void BM_HandleCSSVariables_Simple(benchmark::State& state) {
     for (int i = 0; i < kBatchSize; ++i) {
       const bool resolved =
           handler.HandleCSSVariables(maps[i], holder, configs);
+      auto background = maps[i].find(kPropertyIDBackgroundColor);
+      if (!resolved || background == maps[i].end() ||
+          background->second.IsVariable()) {
+        state.SkipWithError("CSS background variable was not resolved");
+        return;
+      }
       benchmark::DoNotOptimize(resolved);
     }
     state.PauseTiming();

@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+"""Build frozen telemetry fixtures against the checked-out production revision."""
+
+from pathlib import Path
+import json
+import os
+import shutil
+import subprocess
+import sys
+
+source, harness, build = map(Path, sys.argv[1:])
+modules = {
+    "layout": ["layout_benchmark.cc"],
+    "styling": ["//testing/telemetry/styling/css/selector_matcher_benchmark.cc",
+                "//testing/telemetry/styling/css/css_variable_handler_benchmark.cc",
+                "//testing/telemetry/styling/css/css_invalidation_benchmark.cc",
+                "//testing/telemetry/styling/css/fiber_restyle_benchmark.cc"],
+    "runtime": ["//testing/telemetry/lepus/lepus_benchmark.cc"],
+}
+workload = json.loads(Path(os.environ["LYNX_WORKLOAD"]).read_text())
+binaries = {Path(case["binary"]).name for case in workload["cases"]}
+modules = {name: sources for name, sources in modules.items()
+           if f"gungraun_{name}" in binaries}
+if not modules:
+    sys.exit(0)
+
+# Only benchmark plumbing is overlaid. Production sources always come from SHA.
+shutil.copytree(harness / "telemetry", source / "testing/telemetry", dirs_exist_ok=True)
+# Google Benchmark timer controls do not define our collection boundary. Some
+# legacy fixtures leave the timer paused at loop exit; remove timer controls in
+# these harness-owned copies so fixed-work runs remain valid.
+for path in (source / "testing/telemetry").rglob("*.cc"):
+    text = path.read_text()
+    text = text.replace("state.PauseTiming();", "(void)0;")
+    text = text.replace("state.ResumeTiming();", "(void)0;")
+    path.write_text(text)
+fixture = source / "testing/gungraun_native"
+if fixture.exists():
+    shutil.rmtree(fixture)
+fixture.mkdir()
+shutil.copytree(harness / "telemetry/lepus", build / "benchmark_test_files",
+                ignore=shutil.ignore_patterns("*.cc", "BUILD.gn"))
+shutil.copytree("/usr/include/valgrind", fixture / "valgrind")
+for name in ("benchmark_main.cc", "layout_benchmark.cc"):
+    shutil.copy2(harness / name, fixture / name)
+
+blocks = []
+for name, sources in modules.items():
+    blocks.append('''executable("gungraun_%s") {
+  testonly = true
+  sources = %s
+  deps = [
+    "//base/src:base_static",
+    "//third_party/benchmark:benchmark",
+    "//third_party/googletest:gtest",
+    "//core/renderer:tasm",
+    "//core/renderer/css:css",
+    "//core/renderer/dom:dom",
+    "//core/renderer/dom:renderer_dom",
+    "//core/runtime/lepus/bindings:bindings",
+  ]
+}
+''' % (name, json.dumps(["benchmark_main.cc"] + sources)))
+(fixture / "BUILD.gn").write_text('\n'.join(blocks))
+subprocess.run(["tools/hab", "sync", "."], cwd=source, check=True)
+out = source / "out/gungraun"
+if out.exists():
+    shutil.rmtree(out)
+args = ('enable_unittests=true is_debug=false use_flutter_cxx=false '
+        'enable_lepusng_worklet=true symbol_level=2 use_ccache=true')
+root = source / "BUILD.gn"
+original = root.read_text()
+extra = "".join(f'    "//testing/gungraun_native:gungraun_{name}",\n' for name in modules)
+root.write_text(original.replace('  deps = [\n', '  deps = [\n' + extra, 1))
+try:
+    subprocess.run(["tools/env.sh", "gn", "gen", str(out), "--export-compile-commands", "--args=" + args], cwd=source, check=True)
+    for name in ("args.gn", "compile_commands.json"):
+        shutil.copy2(out / name, build / name)
+    (build / "compiler.txt").write_text(subprocess.check_output(
+        [str(source / "buildtools/llvm/bin/clang++"), "--version"], text=True))
+    # Compile fixtures first so harness errors do not wait for the renderer.
+    objects = []
+    for module, sources in modules.items():
+        for name in ["benchmark_main.cc"] + sources:
+            path = (Path(name[2:]) if name.startswith("//") else
+                    Path("testing/gungraun_native") / name)
+            objects.append(f"obj/{path.parent}/gungraun_{module}.{path.stem}.o")
+    subprocess.run(["tools/env.sh", "ninja", "-C", str(out), "-j4", *objects],
+                   cwd=source, check=True)
+    subprocess.run(["tools/env.sh", "ninja", "-C", str(out), "-j4",
+                    *[f"gungraun_{name}" for name in modules]], cwd=source, check=True)
+finally:
+    # GN strips the runnable output. Keep the original ELF for source profiles,
+    # including successfully linked modules when another module fails.
+    for name in modules:
+        binary = out / "exe.unstripped" / f"gungraun_{name}"
+        if binary.is_file():
+            shutil.copy2(binary, build / f"gungraun_{name}")
+    with (build / "ccache.log").open("w") as log:
+        subprocess.run(["ccache", "--show-stats"], stdout=log,
+                       stderr=subprocess.STDOUT, check=False)
+    root.write_text(original)
+    subprocess.run(["git", "restore", "--", "testing/telemetry"], cwd=source, check=True)

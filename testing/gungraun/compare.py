@@ -71,6 +71,7 @@ def main():
     metadata = {
         "suite": suite_name, "workload": suite,
         "dhat": os.environ.get("LYNX_DHAT", "false"),
+        "same_sha_build_reused": refs["base"] == refs["head"],
         "repository": "kdy1/lynx", "comparison": refs,
         "workflow_sha": os.environ["GITHUB_SHA"],
         "run_url": f"https://github.com/kdy1/lynx/actions/runs/{os.environ['GITHUB_RUN_ID']}",
@@ -93,15 +94,19 @@ def main():
         if run("git", "-C", str(source), "rev-parse", "HEAD") != sha:
             raise ValueError("Checkout SHA mismatch")
         build = output / "build"
-        if build.exists():
-            shutil.rmtree(build)
-        build.mkdir()
+        reuse_build = label == "head" and refs["base"] == refs["head"]
         workload = resolve(suite, {"source": source, "harness": harness, "build": build})
         (output / "workload.json").write_text(json.dumps(workload, indent=2) + "\n")
         with (output / f"{label}-build.log").open("w") as log:
-            for command in workload["build"]:
-                subprocess.run(command, cwd=source, env=env, stdout=log,
-                               stderr=subprocess.STDOUT, check=True)
+            if reuse_build:
+                log.write("Same SHA: reuse the base binaries for an independent second measurement.\n")
+            else:
+                if build.exists():
+                    shutil.rmtree(build)
+                build.mkdir()
+                for command in workload["build"]:
+                    subprocess.run(command, cwd=source, env=env, stdout=log,
+                                   stderr=subprocess.STDOUT, check=True)
         resolved_cases = []
         outputs = {}
         for case in workload["cases"]:

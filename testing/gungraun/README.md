@@ -65,6 +65,10 @@ benchmark runner between these boundaries. Vector cases count the whole process.
 DHAT always measures the whole process. `PauseTiming` does not pause Valgrind.
 Instruction counts are not wall-clock speedups.
 
+A same-SHA check builds once and profiles that binary independently twice. It
+checks measurement reproducibility, not build reproducibility. Comparisons of
+different SHAs always build each revision from clean outputs.
+
 The repository pins Google Benchmark to a version whose runner starts with one
 iteration. `--benchmark_min_time=0 --benchmark_repetitions=1` stops adaptive
 iteration growth. A custom reporter requires exactly one successful benchmark

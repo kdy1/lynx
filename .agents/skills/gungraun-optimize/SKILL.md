@@ -1,13 +1,13 @@
 ---
 name: gungraun-optimize
-description: Profile and optimize Lynx native code using Gungraun comparisons in kdy1/lynx GitHub Actions, then publish passing production changes as draft PRs to lynx-family/lynx. Use for requested instruction-count, cache, or allocation optimization and Gungraun regression investigations.
+description: Profile and optimize Lynx native code using Gungraun comparisons in kdy1/lynx GitHub Actions, then obtain human approval for each PR before publishing passing production changes as draft PRs to lynx-family/lynx. Use for requested instruction-count, cache, or allocation optimization and Gungraun regression investigations.
 ---
 
 # Gungraun Optimize for Lynx
 
 Use profiles to select one focused optimization, measure it without an experiment
-PR, and publish only after correctness and performance gates pass. This workflow
-adapts the [SWC Gungraun optimization skill](https://github.com/swc-project/swc-next/tree/main/.agents/skills/gungraun-optimize)
+PR, and publish only after correctness and performance gates pass and a human
+approves that specific PR. This workflow adapts the [SWC Gungraun optimization skill](https://github.com/swc-project/swc-next/tree/main/.agents/skills/gungraun-optimize)
 to Lynx's native code and fork/upstream split.
 
 ## Repository boundaries
@@ -16,7 +16,10 @@ to Lynx's native code and fork/upstream split.
   for workflow dispatch, run lookup, logs, and artifact downloads.
 - Push measurement and publication branches only to the verified fork remote.
   Never push either repository's default branch.
-- Publish accepted optimization PRs to **lynx-family/lynx**, with a head branch
+- Obtain explicit human approval for each upstream PR before creating it, including
+  draft PRs. Passing performance gates or approval for another PR is not approval
+  to publish this PR.
+- Publish approved optimization PRs to **lynx-family/lynx**, with a head branch
   in **kdy1/lynx**, and `draft: true`. Resolve the upstream default branch through
   GitHub (currently `develop`). Do not let `origin` determine the PR destination.
 - Repository-skill and benchmark infrastructure maintenance belongs in the fork.
@@ -80,8 +83,8 @@ reports performance without failing the job for a regression.
 - For each incremental and cumulative comparison, compute
   `score = sum(frequency * head) / sum(frequency * base)` and improvement
   `1 - score`. Inspect individual target and related cases as well as the score.
-- Automatically accept only if both portfolios improve by at least 1% and every
-  target and related case regresses by less than 1%. The initial CI report uses
+- Automatically pass the performance gate only if both portfolios improve by at
+  least 1% and every target and related case regresses by less than 1%. The initial CI report uses
   these thresholds for its three equal-frequency cases. Recompute for an expanded
   frozen portfolio; do not reuse its result for unmeasured cases.
 - If a result is near a threshold or conflicts with profile evidence, repeat the
@@ -100,7 +103,19 @@ be included. Verify measured and published production changes match. Record both
 SHAs. If transfer changes production content or its base, remeasure before
 publication.
 
-Hand `$create-pr` the explicit target `lynx-family/lynx`, head repository
+Before invoking `$create-pr`, prepare the complete proposed diff, title, and body.
+Show the human the target repository and base branch, head branch and exact SHA,
+change summary, correctness results, both CI comparison links, metric changes,
+and any regressions or limitations. Ask for approval to publish that specific
+upstream draft PR, then wait. Explain that this skill requires approval for each
+upstream PR. Silence, an earlier general optimization request, and approval of a
+previous PR do not satisfy this step. If approval is declined or still pending,
+keep the prepared branch on the fork without creating the upstream PR. If the
+proposed diff, base, or head SHA changes after approval, present the revised
+proposal and obtain approval again before creating it.
+
+After that approval, hand `$create-pr` the approval and its exact scope along with
+the explicit target `lynx-family/lynx`, head repository
 `kdy1/lynx`, verified fork push remote and head branch, upstream base branch,
 `draft: true`, exact intended commit, correctness results, both comparison URLs,
 metrics, and measured/published SHA mapping. Include the repository-required AI

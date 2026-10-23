@@ -52,6 +52,9 @@ cargo check --locked --manifest-path testing/gungraun/Cargo.toml --benches
 ```
 
 Use the repository's `gungraun-optimize` skill for profile-driven experiments
-and publication. Accepted production patches go through `$create-pr` as draft
-PRs to `lynx-family/lynx`, with the head branch in `kdy1/lynx`. Keep this fork's
+and publication. After the correctness and performance gates pass, prepare the
+complete diff, PR text, and measurement evidence and obtain explicit human
+approval for each upstream PR. Only then send the approved production patch
+through `$create-pr` as a draft PR to `lynx-family/lynx`, with its head branch in
+`kdy1/lynx`. Approval for one PR does not cover another. Keep this fork's
 skill and measurement infrastructure out of those upstream patches.

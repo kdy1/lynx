@@ -11,8 +11,7 @@ on:
         required: true
       suite:
         description: Workload suite (native includes layout, styling and runtime)
-        type: choice
-        options: [native, vector]
+        type: string
         default: native
       cases:
         description: Comma-separated case IDs (empty runs the complete suite)

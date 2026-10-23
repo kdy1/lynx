@@ -31,6 +31,7 @@ for name, sources in modules.items():
   testonly = true
   sources = %s
   deps = [
+    "//base/src:base_static",
     "//third_party/benchmark:benchmark",
     "//third_party/googletest:gtest",
     "//core/renderer:tasm",
@@ -46,15 +47,20 @@ subprocess.run(["tools/hab", "sync", "."], cwd=source, check=True)
 out = source / "out/gungraun"
 if out.exists():
     shutil.rmtree(out)
-args = 'enable_unittests=true is_debug=false use_flutter_cxx=false'
+args = ('enable_unittests=true is_debug=false use_flutter_cxx=false '
+        'enable_lepusng_worklet=true symbol_level=2')
 root = source / "BUILD.gn"
 original = root.read_text()
 extra = "".join(f'    "//testing/gungraun_native:gungraun_{name}",\n' for name in modules)
 root.write_text(original.replace('  deps = [\n', '  deps = [\n' + extra, 1))
 try:
-    subprocess.run(["tools/env.sh", "gn", "gen", str(out), "--args=" + args], cwd=source, check=True)
+    subprocess.run(["tools/env.sh", "gn", "gen", str(out), "--export-compile-commands", "--args=" + args], cwd=source, check=True)
     subprocess.run(["tools/env.sh", "ninja", "-C", str(out), "-j2",
                     *[f"gungraun_{name}" for name in modules]], cwd=source, check=True)
+    for name in ("args.gn", "compile_commands.json"):
+        shutil.copy2(out / name, build / name)
+    (build / "compiler.txt").write_text(subprocess.check_output(
+        [str(source / "buildtools/llvm/bin/clang++"), "--version"], text=True))
     for name in modules:
         shutil.copy2(out / f"gungraun_{name}", build / f"gungraun_{name}")
 finally:

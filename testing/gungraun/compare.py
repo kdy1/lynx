@@ -13,7 +13,6 @@ import shutil
 from suite import load_suite, resolve
 
 CASES = ("push", "reserve", "erase")
-FLAGS = ("-std=c++17", "-O2", "-g", "-DNDEBUG")
 
 
 def run(*args, **kwargs):
@@ -47,7 +46,7 @@ def report(counts, frequencies=None):
     frequencies = frequencies or {name: 1 for name in counts}
     base = sum(c["base"] * frequencies[name] for name, c in counts.items())
     head = sum(c["head"] * frequencies[name] for name, c in counts.items())
-    # Equal case frequencies. Use integer arithmetic at gate boundaries.
+    # Frequencies are frozen in the suite. Use integers at gate boundaries.
     passed = head * 100 <= base * 99 and all(
         c["head"] * 100 < c["base"] * 101 for c in counts.values()
     )
@@ -61,6 +60,8 @@ def main():
     output = Path(sys.argv[2]).resolve()
     harness = Path(__file__).resolve().parent
     output.mkdir(parents=True, exist_ok=True)
+    if any(output.iterdir()):
+        raise ValueError("Results directory must be empty; stale profiles are not comparable")
     refs = {k: os.environ[k.upper() + "_SHA"] for k in ("base", "head")}
     if not all(re.fullmatch(r"[0-9a-f]{40}", sha) for sha in refs.values()):
         raise ValueError("base/head must be full lowercase commit SHAs")
@@ -73,7 +74,7 @@ def main():
         "repository": "kdy1/lynx", "comparison": refs,
         "workflow_sha": os.environ["GITHUB_SHA"],
         "run_url": f"https://github.com/kdy1/lynx/actions/runs/{os.environ['GITHUB_RUN_ID']}",
-        "compiler": run("clang++", "--version"), "flags": FLAGS,
+        "host_compiler": run("clang++", "--version"),
         "rust": run("rustc", "--version"), "gungraun": "0.20.0",
         "valgrind": run("valgrind", "--version"), "architecture": run("uname", "-m"),
         "runner_image": os.environ.get("ImageVersion"),
@@ -123,6 +124,7 @@ def main():
                             "--bench", "native", "--", f"--home={output / 'profiles'}",
                             baseline, "--save-summary=json"], env=env, stdout=log,
                            stderr=subprocess.STDOUT, check=True)
+        shutil.copytree(build, output / f"{label}-build")
     result = report(read_counts(output / "profiles", cases),
                     {c["id"]: c.get("frequency", 1) for c in suite["cases"]})
     (output / "metrics.json").write_text(json.dumps([

@@ -57,3 +57,47 @@ class ComparisonTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SuiteTests(unittest.TestCase):
+    def test_custom_case_portfolio_and_frequencies(self):
+        with tempfile.TemporaryDirectory() as root:
+            ComparisonTests().summaries(root, {"layout_flex": {"old": 100, "new": 50}})
+            counts = read_counts(root, ["layout_flex"])
+            self.assertEqual(report(counts, {"layout_flex": 3})["performance_gate"], "pass")
+            with self.assertRaises(ValueError):
+                read_counts(root, ["layout_flex", "runtime_array"])
+        counts = {"hot": {"base": 10000, "head": 9800},
+                  "cold": {"base": 10000, "head": 10050}}
+        self.assertEqual(report(counts)["performance_gate"], "not_passed")
+        self.assertEqual(report(counts, {"hot": 10, "cold": 1})["performance_gate"], "pass")
+
+    def test_suite_selection_preserves_order_and_rejects_unknown_cases(self):
+        from suite import load_suite
+        harness = Path(__file__).parent
+        suite = load_suite(harness, "native", "runtime_array,layout_grid")
+        self.assertEqual([c["id"] for c in suite["cases"]], ["layout_grid", "runtime_array"])
+        for selection in ["missing", "layout_grid,layout_grid", "layout_grid,"]:
+            with self.assertRaises(ValueError):
+                load_suite(harness, "native", selection)
+        with self.assertRaises(ValueError):
+            load_suite(harness, "../native")
+
+    def test_suite_requires_independent_validation(self):
+        from suite import load_suite
+        with tempfile.TemporaryDirectory() as root:
+            suites = Path(root) / "suites"
+            suites.mkdir()
+            path = suites / "custom.json"
+            for cases in [[{"id": "foo", "binary": "/foo"}],
+                          [{"id": "foo", "expected_stdout": "ok", "frequency": 0}],
+                          [{"id": "foo", "expected_stdout": "ok"}] * 2]:
+                path.write_text(json.dumps({"cases": cases}))
+                with self.assertRaises(ValueError):
+                    load_suite(root, "custom")
+
+    def test_resolve_keeps_arguments_literal(self):
+        from suite import resolve
+        self.assertEqual(resolve(["{source}/binary", "{build}/file with spaces", "$(false)"],
+                                 {"source": "/src", "build": "/out"}),
+                         ["/src/binary", "/out/file with spaces", "$(false)"])

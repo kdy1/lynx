@@ -53,8 +53,8 @@ gh workflow run gungraun.yml --repo kdy1/lynx --ref <workflow-branch> \
 
 Unknown or duplicate IDs fail before building. Freeze the suite, selected cases,
 frequencies, and tools before comparing an optimization. Do not remove regressing
-cases after inspecting results. Selecting cases currently reduces profiling work;
-the native suite still builds all three module executables.
+cases after inspecting results. Selecting cases also limits the native module executables that are built.
+Each selected executable still links its production dependency graph.
 
 ## Measurement boundary and correctness
 

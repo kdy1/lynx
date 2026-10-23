@@ -3,11 +3,27 @@
 
 from pathlib import Path
 import json
+import os
 import shutil
 import subprocess
 import sys
 
 source, harness, build = map(Path, sys.argv[1:])
+modules = {
+    "layout": ["layout_benchmark.cc"],
+    "styling": ["//testing/telemetry/styling/css/selector_matcher_benchmark.cc",
+                "//testing/telemetry/styling/css/css_variable_handler_benchmark.cc",
+                "//testing/telemetry/styling/css/css_invalidation_benchmark.cc",
+                "//testing/telemetry/styling/css/fiber_restyle_benchmark.cc"],
+    "runtime": ["//testing/telemetry/lepus/lepus_benchmark.cc"],
+}
+workload = json.loads(Path(os.environ["LYNX_WORKLOAD"]).read_text())
+binaries = {Path(case["binary"]).name for case in workload["cases"]}
+modules = {name: sources for name, sources in modules.items()
+           if f"gungraun_{name}" in binaries}
+if not modules:
+    sys.exit(0)
+
 # Only benchmark plumbing is overlaid. Production sources always come from SHA.
 shutil.copytree(harness / "telemetry", source / "testing/telemetry", dirs_exist_ok=True)
 fixture = source / "testing/gungraun_native"
@@ -20,14 +36,6 @@ shutil.copytree("/usr/include/valgrind", fixture / "valgrind")
 for name in ("benchmark_main.cc", "layout_benchmark.cc"):
     shutil.copy2(harness / name, fixture / name)
 
-modules = {
-    "layout": ["layout_benchmark.cc"],
-    "styling": ["//testing/telemetry/styling/css/selector_matcher_benchmark.cc",
-                "//testing/telemetry/styling/css/css_variable_handler_benchmark.cc",
-                "//testing/telemetry/styling/css/css_invalidation_benchmark.cc",
-                "//testing/telemetry/styling/css/fiber_restyle_benchmark.cc"],
-    "runtime": ["//testing/telemetry/lepus/lepus_benchmark.cc"],
-}
 blocks = []
 for name, sources in modules.items():
     blocks.append('''executable("gungraun_%s") {
@@ -58,7 +66,7 @@ extra = "".join(f'    "//testing/gungraun_native:gungraun_{name}",\n' for name i
 root.write_text(original.replace('  deps = [\n', '  deps = [\n' + extra, 1))
 try:
     subprocess.run(["tools/env.sh", "gn", "gen", str(out), "--export-compile-commands", "--args=" + args], cwd=source, check=True)
-    subprocess.run(["tools/env.sh", "ninja", "-C", str(out), "-j2",
+    subprocess.run(["tools/env.sh", "ninja", "-C", str(out), "-j4",
                     *[f"gungraun_{name}" for name in modules]], cwd=source, check=True)
     for name in ("args.gn", "compile_commands.json"):
         shutil.copy2(out / name, build / name)

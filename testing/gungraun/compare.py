@@ -84,7 +84,8 @@ def main():
         "boundary": "Callgrind: instrumented cases use client requests; others count the whole process. DHAT: whole process",
     }
     (output / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
-    env = dict(os.environ, LYNX_CASES=str(output / "cases.json"), GUNGRAUN_COLOR="never")
+    env = dict(os.environ, LYNX_CASES=str(output / "cases.json"),
+               LYNX_WORKLOAD=str(output / "workload.json"), GUNGRAUN_COLOR="never")
     base_outputs = None
     for label, sha in refs.items():
         run("git", "-C", str(source), "fetch", "--no-tags", "origin", sha)
@@ -96,6 +97,7 @@ def main():
             shutil.rmtree(build)
         build.mkdir()
         workload = resolve(suite, {"source": source, "harness": harness, "build": build})
+        (output / "workload.json").write_text(json.dumps(workload, indent=2) + "\n")
         with (output / f"{label}-build.log").open("w") as log:
             for command in workload["build"]:
                 subprocess.run(command, cwd=source, env=env, stdout=log,

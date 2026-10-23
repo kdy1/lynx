@@ -132,8 +132,10 @@ The results directory must be empty to prevent reuse of stale profiles.
 
 Callgrind always enables cache and branch simulation. `dhat=true` adds allocation
 profiles. Raw profiles, all tool metrics (`metrics.json`), logs, validation
-outputs, and binaries from both revisions are retained. Native builds also retain
-GN arguments, compile commands, and the actual compiler version. `metadata.json`
+outputs, and binaries from both revisions are retained. Native builds retain unstripped ELF binaries with source/debug symbols,
+GN arguments, compile commands, and the actual compiler version. The compiler
+cache checks compiler contents and normal ccache inputs; it does not reuse
+objects for changed inputs. Cache entries are saved on failed builds too. `metadata.json`
 records exact production/workflow SHAs, run URL, suite selection, frequencies,
 tools, runner image, architecture, and frozen harness/telemetry hashes.
 

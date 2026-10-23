@@ -47,7 +47,9 @@ void BM_Layout(benchmark::State& state, DisplayType display, bool cached) {
   root->ReLayout();
   for (auto _ : state) {
     for (int i = 0; i < 100; ++i) {
-      if (!cached) root->MarkDirtyRecursion();
+      if (!cached) {
+        for (const auto& node : nodes) node->MarkDirty();
+      }
       root->ReLayout();
       benchmark::DoNotOptimize(root->GetBorderBoundWidth());
     }

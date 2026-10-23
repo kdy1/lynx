@@ -67,7 +67,7 @@ out = source / "out/gungraun"
 if out.exists():
     shutil.rmtree(out)
 args = ('enable_unittests=true is_debug=false use_flutter_cxx=false '
-        'enable_lepusng_worklet=true symbol_level=2')
+        'enable_lepusng_worklet=true symbol_level=2 use_ccache=true')
 root = source / "BUILD.gn"
 original = root.read_text()
 extra = "".join(f'    "//testing/gungraun_native:gungraun_{name}",\n' for name in modules)
@@ -89,8 +89,15 @@ try:
                    cwd=source, check=True)
     subprocess.run(["tools/env.sh", "ninja", "-C", str(out), "-j4",
                     *[f"gungraun_{name}" for name in modules]], cwd=source, check=True)
-    for name in modules:
-        shutil.copy2(out / f"gungraun_{name}", build / f"gungraun_{name}")
 finally:
+    # GN strips the runnable output. Keep the original ELF for source profiles,
+    # including successfully linked modules when another module fails.
+    for name in modules:
+        binary = out / "exe.unstripped" / f"gungraun_{name}"
+        if binary.is_file():
+            shutil.copy2(binary, build / f"gungraun_{name}")
+    with (build / "ccache.log").open("w") as log:
+        subprocess.run(["ccache", "--show-stats"], stdout=log,
+                       stderr=subprocess.STDOUT, check=False)
     root.write_text(original)
     subprocess.run(["git", "restore", "--", "testing/telemetry"], cwd=source, check=True)

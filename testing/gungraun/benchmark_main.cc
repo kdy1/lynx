@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <vector>
 
+#include "base/include/log/logging.h"
 #include "third_party/benchmark/include/benchmark/benchmark.h"
 #include "third_party/googletest/googletest/include/gtest/gtest.h"
 #include "valgrind/callgrind.h"
@@ -25,6 +26,9 @@ class ValidationReporter : public benchmark::BenchmarkReporter {
   void ReportRuns(const std::vector<Run>& reports) override {
     CALLGRIND_STOP_INSTRUMENTATION;
     for (const auto& report : reports) {
+      if (report.error_occurred) {
+        std::fprintf(stderr, "%s\n", report.error_message.c_str());
+      }
       ++runs;
       valid = valid && !report.error_occurred && report.iterations == 1;
     }
@@ -34,6 +38,8 @@ class ValidationReporter : public benchmark::BenchmarkReporter {
 };
 
 int main(int argc, char** argv) {
+  // Normal engine cleanup logs contain addresses and timestamps.
+  lynx::base::logging::SetMinLogLevel(lynx::base::logging::LOG_FATAL);
   benchmark::Initialize(&argc, argv);
   if (benchmark::ReportUnrecognizedArguments(argc, argv)) return 2;
   ValidationReporter reporter;

@@ -73,7 +73,9 @@ The repository pins Google Benchmark to a version whose runner starts with one
 iteration. `--benchmark_min_time=0 --benchmark_repetitions=1` stops adaptive
 iteration growth. A custom reporter requires exactly one successful benchmark
 report with exactly one iteration, rejects skipped/error cases, and prints a
-stable `ok` instead of timing-dependent output. Existing fixture validation is
+stable `ok` instead of timing-dependent output. Nonfatal engine logging is
+disabled to exclude address/timestamp formatting. Fixture errors, fatal logs,
+and GTest assertion failures still fail validation. Existing fixture validation is
 preserved. Timer-control calls are removed from the frozen telemetry copies;
 they do not define the Callgrind boundary, and some legacy fixtures leave the
 timer paused at loop exit. A selected benchmark with explicit iterations other

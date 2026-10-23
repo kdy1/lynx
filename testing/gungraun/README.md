@@ -70,7 +70,10 @@ iteration. `--benchmark_min_time=0 --benchmark_repetitions=1` stops adaptive
 iteration growth. A custom reporter requires exactly one successful benchmark
 report with exactly one iteration, rejects skipped/error cases, and prints a
 stable `ok` instead of timing-dependent output. Existing fixture validation is
-preserved. A selected benchmark with explicit iterations other than one fails
+preserved. Timer-control calls are removed from the frozen telemetry copies;
+they do not define the Callgrind boundary, and some legacy fixtures leave the
+timer paused at loop exit. A selected benchmark with explicit iterations other
+than one fails
 this reporter; add a dedicated fixed-work fixture for such a case.
 
 This execution/fixture validation does not replace relevant unit tests. The

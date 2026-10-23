@@ -26,6 +26,14 @@ if not modules:
 
 # Only benchmark plumbing is overlaid. Production sources always come from SHA.
 shutil.copytree(harness / "telemetry", source / "testing/telemetry", dirs_exist_ok=True)
+# Google Benchmark timer controls do not define our collection boundary. Some
+# legacy fixtures leave the timer paused at loop exit; remove timer controls in
+# these harness-owned copies so fixed-work runs remain valid.
+for path in (source / "testing/telemetry").rglob("*.cc"):
+    text = path.read_text()
+    text = text.replace("state.PauseTiming();", "(void)0;")
+    text = text.replace("state.ResumeTiming();", "(void)0;")
+    path.write_text(text)
 fixture = source / "testing/gungraun_native"
 if fixture.exists():
     shutil.rmtree(fixture)

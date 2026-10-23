@@ -16,7 +16,12 @@ CASES = ("push", "reserve", "erase")
 
 
 def run(*args, **kwargs):
-    return subprocess.check_output(args, text=True, **kwargs).strip()
+    try:
+        return subprocess.check_output(args, text=True, **kwargs).strip()
+    except subprocess.CalledProcessError as error:
+        if error.output:
+            print(error.output, file=sys.stderr)
+        raise
 
 
 def read_counts(directory, cases=CASES):
@@ -114,11 +119,13 @@ def main():
                         env=case.get("env", {}))
             case_env = dict(env, **case["env"])
             actual = run(case["binary"], *case["args"], cwd=case["cwd"], env=case_env)
+            (output / f"{label}-{case['id']}.stdout").write_text(actual + "\n")
             expected = (run(*case["reference"], cwd=case["cwd"], env=case_env)
                         if "reference" in case else case["expected_stdout"].strip())
             if actual != expected:
-                raise ValueError(f"Output validation failed: {label}/{case['id']}")
+                raise ValueError(f"Output validation failed: {label}/{case['id']}: {actual[:2000]!r}")
             outputs[case["id"]] = actual
+            (output / f"{label}-validation.json").write_text(json.dumps(outputs, indent=2) + "\n")
             resolved_cases.append(case)
         if base_outputs is not None and outputs != base_outputs:
             raise ValueError("Workload outputs differ across revisions")
